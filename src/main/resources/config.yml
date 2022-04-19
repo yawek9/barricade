@@ -1,0 +1,126 @@
+# Database settings.
+data:
+  # Set to 'SQLite' or 'MySQL'.
+  database: "SQLite"
+  # Change if you set database to the 'MySQL'.
+  mysql:
+    address: "localhost"
+    port: "3306"
+    database-name: "barricade"
+    user: "root"
+    password: ""
+  # License key used for downloading GeoIP database. (more: https://support.maxmind.com/hc/en-us/articles/4407111582235-Generate-a-License-Key)
+  geoip-license-key: "LICENSE_KEY"
+# Settings related to the player's nicknames restrictions.
+nickname-block:
+  # Higher priority causes earlier execution.
+  priority: 1
+  # If the player's nickname contains any of the listed strings, he won't be allowed to join.
+  # Letters case is ignored.
+  block-containing:
+    - "mcdrop"
+    - "mcspam"
+    - "mcstorm"
+# Settings related to the account limits.
+account-limit:
+  priority: 2
+  # Number of players with same ip address that can be connected at the same time.
+  per-ip-limit: 3
+# Setting related to the ASN blocking.
+asn-block:
+  priority: 3
+  # Blacklist of ASNs, you can obtain ASN code by ip on https://mxtoolbox.com/asn.aspx.
+  list:
+    - "AS16276" # OVH SAS
+    - "AS15169" # Google Cloud
+    - "AS16509" # Amazon Web Services
+# Settings related to the blacklist.
+blacklist:
+  priority: 4
+# Settings related to the GeoIP location.
+geoip:
+  priority: 5
+  # If the countries list has to be used as blacklist.
+  blacklist-mode: true
+  # List of blacklisted/whitelisted countries as alpha-2 codes. (list: https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes)
+  countries: []
+# Settings related to the proxy rate limit.
+rate-limit:
+  priority: 6
+  connections-per-second: 3
+# Settings related to the anti spam-bot.
+anti-spam:
+  enabled: true
+  # Time in milliseconds before which same messages will be considered as a spam-bot messages.
+  chat-threshold: 50
+# Settings related to the server connecting queue.
+server-queue:
+  servers:
+#    some-server:
+#      # Period in milliseconds between which players are removed from the queue and moved to the server.
+#      period: 500
+# All available messages which players can see.
+# Available formats:
+# &#{HEX}{MESSAGE} - Text colored in one color.
+# &#gr{HEX1}{HEX2}{MESSAGE} - Text colored with a gradient of two colors.
+messages:
+  chat:
+    prefix: "&#FF5555&lBarricade &#AA0000» &#FF5555"
+    no-permission: "You don't have permission to execute this command."
+    main-usage:
+      - "&#FF5555Available commands:"
+      - "&#FF5555» &#FFFFFF/barricade whitelist add/remove (address/nickname) &#FF5555- Adds/Removes user or address to/from the whitelist;"
+      - "&#FF5555» &#FFFFFF/barricade blacklist add/remove (address/nickname) &#FF5555- Adds/Removes user or address to/from the blacklist;"
+      - "&#FF5555» &#FFFFFF/barricade info (address/nickname) &#FF5555- Shows information about address or nickname."
+    whitelist-usage:
+      - "&#FF5555Correct usage:"
+      - "&#FF5555» &#FFFFFF/barricade whitelist add (address/nickname) &#FF5555- Adds user or address to the whitelist;"
+      - "&#FF5555» &#FFFFFF/barricade whitelist remove (address/nickname) &#FF5555- Removes user or address from the whitelist."
+    blacklist-usage:
+      - "&#FF5555Correct usage:"
+      - "&#FF5555» &#FFFFFF/barricade blacklist add (address/nickname) &#FF5555- Adds user or address to the blacklist;"
+      - "&#FF5555» &#FFFFFF/barricade blacklist remove (address/nickname) &#FF5555- Removes user or address from the blacklist."
+    info-usage:
+      - "&#FF5555Correct usage:"
+      - "&#FF5555» &#FFFFFF/barricade info (address/nickname) &#FF5555- Shows information about address or nickname."
+    address-already-whitelisted: "Address {} is already whitelisted."
+    player-already-whitelisted: "Player {} is already whitelisted."
+    address-whitelisted: "Address {} has been whitelisted."
+    player-whitelisted: "Player {} has been whitelisted."
+    address-not-whitelisted: "Address {} is not whitelisted."
+    player-not-whitelisted: "Player {} is not whitelisted."
+    address-whitelist-removed: "Address {} has been removed from the whitelist."
+    player-whitelist-removed: "Player {} has been removed from the whitelist."
+    address-already-blacklisted: "Address {} is already blacklisted."
+    player-already-blacklisted: "Player {} is already blacklisted."
+    address-blacklisted: "Address {} has been blacklisted."
+    player-blacklisted: "Player {} has been blacklisted."
+    address-not-blacklisted: "Address {} is not blacklisted."
+    player-not-blacklisted: "Player {} is not blacklisted."
+    address-blacklist-removed: "Address {} has been removed from the blacklist."
+    player-blacklist-removed: "Player {} has been removed from the blacklist."
+    wrong-address-player: "Address or player {} was not found."
+    queue-position: "You are now &#FFFFFF{} &#FF5555in the queue to the server &#FFFFFF{}&#FF5555."
+    queue-moved: "You have been moved to the server {}."
+    already-in-queue: "You are already in the queue to the server {}."
+    address-info:
+      - "&#FF5555Information about &#FFFFFF{}&#FF5555:"
+      - "&#FF5555Whitelisted: &#FFFFFF{}"
+      - "&#FF5555Blacklisted: &#FFFFFF{}"
+      - "&#FF5555Nicknames: &#FFFFFF{}"
+    player-info:
+      - "&#FF5555Information about &#FFFFFF{}&#FF5555:"
+      - "&#FF5555Whitelisted: &#FFFFFF{}"
+      - "&#FF5555Blacklisted: &#FFFFFF{}"
+      - "&#FF5555IP addresses: &#FFFFFF{}"
+    config-reloaded: "Config has been reloaded."
+    yes-in-message: "yes"
+    no-in-message: "no"
+  kick:
+    restricted-nickname: "&#FF5555Your nickname is blocked on this server."
+    asn-blocked: "&#FF5555Your connection provider is blocked on this server."
+    ip-limit: "&#FF5555Too many account are using this IP address, you are not allowed to join right now."
+    rate-limit: "&#FF5555Too much players are trying to connect now, try to connect again in a while."
+    blacklisted: "&#FF5555You are blocked on this server."
+    country-blocked: "&#FF5555Your country is not allowed on this server."
+    spam-bot-suspect: "&#FF5555You are suspected of being a spam-bot."
