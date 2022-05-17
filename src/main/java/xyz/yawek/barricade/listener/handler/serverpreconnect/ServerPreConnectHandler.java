@@ -51,6 +51,7 @@ public abstract class ServerPreConnectHandler {
         ServerQueueManager queueManager = barricade.getServerQueueManager();
         Player player = server.getPlayer(playerUuid).orElse(null);
         if (player == null) return false;
+        if (player.hasPermission("barricade.exemptqueue")) return true;
         switch (joinAttempt(serverName, playerUuid)) {
             case QUEUE_DISABLED -> { return true; }
             case NOT_QUEUED -> {
