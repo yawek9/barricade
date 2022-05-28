@@ -24,7 +24,7 @@ nickname-block:
 # Settings related to the account limits.
 account-limit:
   priority: 2
-  # Number of players with same ip address that can be connected at the same time.
+  # Number of players with same ip address that can be connected at the same time. Set -1 to disable.
   per-ip-limit: 3
 # Setting related to the ASN blocking.
 asn-block:
@@ -47,6 +47,7 @@ geoip:
 # Settings related to the proxy rate limit.
 rate-limit:
   priority: 6
+  # Maximum global connections that can be initialized in one second. Set -1 to disable.
   connections-per-second: 3
 # Settings related to the anti spam-bot.
 anti-spam:

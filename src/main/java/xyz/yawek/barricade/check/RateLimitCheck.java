@@ -20,7 +20,6 @@ package xyz.yawek.barricade.check;
 
 import net.kyori.adventure.text.Component;
 import xyz.yawek.barricade.Barricade;
-import xyz.yawek.barricade.manager.RateLimitManager;
 import xyz.yawek.barricade.user.ConnectingUser;
 
 import java.util.Optional;
@@ -33,9 +32,10 @@ public class RateLimitCheck extends AbstractCheck {
 
     @Override
     public Optional<Component> check(ConnectingUser connectingUser) {
-        RateLimitManager rateLimitManager = barricade.getRateLimitManager();
-        if (rateLimitManager.getCounter()
-                > barricade.getConfig().connectionsPerSecond()) {
+        int connectionsCounter = barricade.getRateLimitManager().getCounter();
+        int maxConnectionsPerSecond = barricade.getConfig().connectionsPerSecond();
+        if (maxConnectionsPerSecond != -1
+                && connectionsCounter > maxConnectionsPerSecond) {
             return Optional.of(barricade.getConfig().rateLimit());
         }
         return Optional.empty();
