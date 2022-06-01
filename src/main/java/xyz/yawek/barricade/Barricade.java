@@ -43,7 +43,7 @@ import java.nio.file.Path;
 
 @Plugin(id = "barricade",
         name = "Barricade",
-        version = "1.0.0",
+        version = "1.0.1",
         url = "https://github.com/yawek9/barricade",
         description = "Plugin that helps protecting the proxy against bots and unwanted players.",
         authors = {"yawek9"})
