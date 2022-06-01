@@ -39,10 +39,9 @@ public class SQLiteUserDataAccess extends SQLiteDataAccess implements UserDataAc
 
     @Override
     public Optional<Set<String>> getAddresses(String nickname) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           SELECT addresses FROM users WHERE nickname = ?
-                        """);
+                        """)) {
             preparedStatement.setString(1, nickname);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
@@ -64,13 +63,12 @@ public class SQLiteUserDataAccess extends SQLiteDataAccess implements UserDataAc
         addressesOptional.ifPresent(addresses::addAll);
         addresses.add(address);
 
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           INSERT INTO users (nickname, addresses) VALUES (?, ?)
                           ON CONFLICT(nickname) DO UPDATE SET
                           nickname = ?,
                           addresses = ?
-                        """);
+                        """)) {
             preparedStatement.setString(1, nickname);
             preparedStatement.setString(2, String.join(",", addresses));
             preparedStatement.setString(3, nickname);
@@ -85,10 +83,9 @@ public class SQLiteUserDataAccess extends SQLiteDataAccess implements UserDataAc
 
     @Override
     public boolean isWhitelisted(String nickname) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           SELECT whitelisted FROM users where nickname = ?
-                        """);
+                        """)) {
             preparedStatement.setString(1, nickname);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
@@ -104,10 +101,9 @@ public class SQLiteUserDataAccess extends SQLiteDataAccess implements UserDataAc
 
     @Override
     public void setWhitelisted(String nickname, boolean whitelisted) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           UPDATE users SET whitelisted = ? WHERE nickname = ?
-                        """);
+                        """)) {
             preparedStatement.setBoolean(1, whitelisted);
             preparedStatement.setString(2, nickname);
             preparedStatement.execute();
@@ -120,10 +116,9 @@ public class SQLiteUserDataAccess extends SQLiteDataAccess implements UserDataAc
 
     @Override
     public boolean isBlacklisted(String nickname) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           SELECT blacklisted FROM users where nickname = ?
-                        """);
+                        """)) {
             preparedStatement.setString(1, nickname);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
@@ -139,10 +134,9 @@ public class SQLiteUserDataAccess extends SQLiteDataAccess implements UserDataAc
 
     @Override
     public void setBlacklisted(String nickname, boolean blacklisted) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           UPDATE users SET blacklisted = ? WHERE nickname = ?
-                        """);
+                        """)) {
             preparedStatement.setBoolean(1, blacklisted);
             preparedStatement.setString(2, nickname);
             preparedStatement.execute();

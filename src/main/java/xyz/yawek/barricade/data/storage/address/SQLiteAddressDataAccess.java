@@ -39,10 +39,9 @@ public class SQLiteAddressDataAccess extends SQLiteDataAccess implements Address
 
     @Override
     public Optional<Set<String>> getNicknames(String address) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           SELECT nicknames FROM addresses WHERE address = ?
-                        """);
+                        """)) {
             preparedStatement.setString(1, address);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
@@ -64,13 +63,12 @@ public class SQLiteAddressDataAccess extends SQLiteDataAccess implements Address
         nicknamesOptional.ifPresent(nicknames::addAll);
         nicknames.add(nickname);
 
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           INSERT INTO addresses (address, nicknames) VALUES (?, ?)
                           ON CONFLICT(address) DO UPDATE SET
                           address = ?,
                           nicknames = ?
-                        """);
+                        """)) {
             preparedStatement.setString(1, address);
             preparedStatement.setString(2, String.join(",", nicknames));
             preparedStatement.setString(3, address);
@@ -85,10 +83,9 @@ public class SQLiteAddressDataAccess extends SQLiteDataAccess implements Address
 
     @Override
     public boolean isWhitelisted(String address) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           SELECT whitelisted FROM addresses where address = ?
-                        """);
+                        """)) {
             preparedStatement.setString(1, address);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
@@ -104,10 +101,9 @@ public class SQLiteAddressDataAccess extends SQLiteDataAccess implements Address
 
     @Override
     public void setWhitelisted(String address, boolean whitelisted) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           UPDATE addresses SET whitelisted = ? WHERE address = ?
-                        """);
+                        """)) {
             preparedStatement.setBoolean(1, whitelisted);
             preparedStatement.setString(2, address);
             preparedStatement.execute();
@@ -120,10 +116,9 @@ public class SQLiteAddressDataAccess extends SQLiteDataAccess implements Address
 
     @Override
     public boolean isBlacklisted(String address) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           SELECT blacklisted FROM addresses where address = ?
-                        """);
+                        """)) {
             preparedStatement.setString(1, address);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
@@ -139,10 +134,9 @@ public class SQLiteAddressDataAccess extends SQLiteDataAccess implements Address
 
     @Override
     public void setBlacklisted(String address, boolean blacklisted) {
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("""
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           UPDATE addresses SET blacklisted = ? WHERE address = ?
-                        """);
+                        """)) {
             preparedStatement.setBoolean(1, blacklisted);
             preparedStatement.setString(2, address);
             preparedStatement.execute();
