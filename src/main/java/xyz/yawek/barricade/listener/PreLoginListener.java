@@ -19,6 +19,7 @@
 package xyz.yawek.barricade.listener;
 
 import com.velocitypowered.api.event.EventTask;
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import xyz.yawek.barricade.Barricade;
@@ -32,7 +33,7 @@ public class PreLoginListener extends PreLoginHandler {
     }
 
     @SuppressWarnings("unused")
-    @Subscribe
+    @Subscribe(order = PostOrder.LAST)
     public EventTask onPlayerPreLogin(PreLoginEvent e) {
         return EventTask.async(() -> {
             ConnectingUser connectingUser = barricade.getConnectingUserManager().create(

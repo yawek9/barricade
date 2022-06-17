@@ -19,6 +19,7 @@
 package xyz.yawek.barricade.listener;
 
 import com.velocitypowered.api.event.EventTask;
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -32,7 +33,7 @@ public class ServerPreConnectListener extends ServerPreConnectHandler {
     }
 
     @SuppressWarnings("unused")
-    @Subscribe
+    @Subscribe(order = PostOrder.LAST)
     public EventTask onServerPreConnected(ServerPreConnectEvent e) {
         return EventTask.async(() -> {
             RegisteredServer server = e.getOriginalServer();
