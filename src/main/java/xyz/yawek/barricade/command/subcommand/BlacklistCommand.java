@@ -54,6 +54,11 @@ public class BlacklistCommand extends PermissibleCommand {
                     storedAddress.setBlacklisted(true);
                     addressManager.update(storedAddress);
                     source.sendMessage(config.addressBlacklisted(args[1]));
+
+                    barricade.getServer().getAllPlayers().stream()
+                            .filter(player -> player.getRemoteAddress()
+                                    .getHostName().equals(storedAddress.getAddress()))
+                            .forEach(player -> player.disconnect(config.blacklisted()));
                     return;
                 }
 
@@ -68,6 +73,9 @@ public class BlacklistCommand extends PermissibleCommand {
                     storedUser.setBlacklisted(true);
                     storedUserManager.update(storedUser);
                     source.sendMessage(config.playerBlacklisted(args[1]));
+
+                    barricade.getServer().getPlayer(storedUser.getNickname())
+                            .ifPresent(player -> player.disconnect(config.blacklisted()));
                     return;
                 }
                 source.sendMessage(config.wrongAddressPlayer(args[1]));
