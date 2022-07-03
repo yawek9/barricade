@@ -62,6 +62,10 @@ public class Config {
         return configProvider.getString("data.geoip-license-key");
     }
 
+    public int geoipReloadPeriod() {
+        return configProvider.getInt("data.geoip-reload-period");
+    }
+
     public int nicknameBlockPriority() {
         return configProvider.getInt("nickname-block.priority");
     }

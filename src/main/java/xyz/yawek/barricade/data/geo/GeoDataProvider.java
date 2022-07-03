@@ -19,6 +19,7 @@
 package xyz.yawek.barricade.data.geo;
 
 import com.maxmind.db.CHMCache;
+import com.maxmind.db.Reader;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -47,7 +48,10 @@ public class GeoDataProvider {
     public GeoDataProvider(Barricade barricade) {
         this.barricade = barricade;
 
-        LogUtils.info("Downloading GeoIP databases...");
+        loadDatabases();
+    }
+
+    public void loadDatabases() {
         try {
             String licenseKey = barricade.getConfig().geoipLicense();
             if (licenseKey.equalsIgnoreCase("license_key")) {
@@ -61,23 +65,25 @@ public class GeoDataProvider {
             File countryArchiveFile = new File(dataFolder, "GeoLite2-Country.tar.gz");
             File asnFile = new File(dataFolder, "GeoLite2-ASN.mmdb");
             File asnArchiveFile = new File(dataFolder, "GeoLite2-ASN.tar.gz");
+
+            LogUtils.info("Downloading GeoIP databases...");
+            if (countryReader != null) countryReader.close();
             downloadDBFile(countryFile, countryArchiveFile,
                     "https://download.maxmind.com/app/geoip_download" +
                             "?edition_id=GeoLite2-Country&license_key=" +
                             licenseKey +
                             "&suffix=tar.gz");
+            if (asnReader != null) asnReader.close();
             downloadDBFile(asnFile, asnArchiveFile,
                     "https://download.maxmind.com/app/geoip_download" +
                             "?edition_id=GeoLite2-ASN&license_key=" +
                             licenseKey +
                             "&suffix=tar.gz");
-
             countryReader = loadReader("GeoLite2-Country.mmdb");
             asnReader = loadReader("GeoLite2-ASN.mmdb");
-            LogUtils.info("GeoIP databases have been downloaded successfully!");
         } catch (IOException e) {
+            LogUtils.error("GeoIP files could not be loaded.");
             e.printStackTrace();
-            LogUtils.error("GeoIP file could not be downloaded.");
         }
     }
 
@@ -95,31 +101,42 @@ public class GeoDataProvider {
         return Optional.empty();
     }
 
-    private void downloadDBFile(File targetFile, File archive, String urlString) throws IOException {
-        ReadableByteChannel readableByteChannel = Channels.newChannel(new URL(urlString).openStream());
-        FileOutputStream fileOutputStream = new FileOutputStream(archive);
-        fileOutputStream.getChannel()
-                .transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-        fileOutputStream.close();
+    private void downloadDBFile(File targetFile, File archive, String urlString) {
+        try {
+            ReadableByteChannel readableByteChannel = Channels.newChannel(new URL(urlString).openStream());
+            FileOutputStream fileOutputStream = new FileOutputStream(archive);
+            fileOutputStream.getChannel()
+                    .transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+            fileOutputStream.close();
 
-        TarArchiveInputStream tarInput =
-                new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(archive)));
-        TarArchiveEntry entry = tarInput.getNextTarEntry();
-        while (entry != null) {
-            String[] entriesNames = entry.getName().split("/");
-            if (entriesNames[entriesNames.length - 1].equals(targetFile.getName())) {
-                IOUtils.copy(tarInput, new FileOutputStream(targetFile));
+            TarArchiveInputStream tarInput =
+                    new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(archive)));
+            TarArchiveEntry entry = tarInput.getNextTarEntry();
+            while (entry != null) {
+                String[] entriesNames = entry.getName().split("/");
+                if (entriesNames[entriesNames.length - 1].equals(targetFile.getName())) {
+                    FileOutputStream outputStream = new FileOutputStream(targetFile);
+                    IOUtils.copy(tarInput, outputStream);
+                    outputStream.close();
+                }
+                entry = tarInput.getNextTarEntry();
             }
-            entry = tarInput.getNextTarEntry();
+            tarInput.close();
+            LogUtils.info("GeoIP {} database has been downloaded successfully!", targetFile.getName());
+        } catch (IOException e) {
+            LogUtils.error("GeoIP {} file could not be downloaded.", targetFile.getName());
+            e.printStackTrace();
+        } finally {
+            archive.delete();
         }
-        tarInput.close();
-
-        archive.delete();
     }
 
     private DatabaseReader loadReader(String fileName) throws IOException {
-        return new DatabaseReader.Builder(new File(barricade.getDataDirectory().toFile(),
-                fileName)).withCache(new CHMCache()).build();
+        return new DatabaseReader.Builder(
+                new File(barricade.getDataDirectory().toFile(), fileName))
+                .withCache(new CHMCache())
+                .fileMode(Reader.FileMode.MEMORY)
+                .build();
     }
 
 }

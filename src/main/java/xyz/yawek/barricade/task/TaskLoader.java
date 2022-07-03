@@ -40,6 +40,10 @@ public class TaskLoader {
         Config config = barricade.getConfig();
         Scheduler scheduler = barricade.getServer().getScheduler();
         tasks.forEach(ScheduledTask::cancel);
+        tasks.add(scheduler.buildTask(barricade, new GeoDataLoadTask(barricade))
+                .repeat(Duration.ofSeconds(config.geoipReloadPeriod()))
+                .delay(Duration.ofSeconds(config.geoipReloadPeriod()))
+                .schedule());
         tasks.add(scheduler.buildTask(barricade, new RateLimitResetTask(barricade))
                 .repeat(Duration.ofSeconds(1))
                 .schedule());

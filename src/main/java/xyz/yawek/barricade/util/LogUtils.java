@@ -25,12 +25,12 @@ public class LogUtils {
 
     private static final Logger LOGGER = Barricade.getBarricade().getLogger();
 
-    public static void info(String text) {
-        LOGGER.info(text);
+    public static void info(String text, String... arguments) {
+        LOGGER.info(text, (Object[]) arguments);
     }
 
-    public static void error(String text) {
-        LOGGER.error(text);
+    public static void error(String text, String... arguments) {
+        LOGGER.error(text, (Object[]) arguments);
     }
 
     public static void warn(String text) {

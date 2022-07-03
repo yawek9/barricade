@@ -11,6 +11,8 @@ data:
     password: ""
   # License key used for downloading GeoIP database. (more: https://support.maxmind.com/hc/en-us/articles/4407111582235-Generate-a-License-Key)
   geoip-license-key: "LICENSE_KEY"
+  # The time in seconds between which GeoIP databases will be re-downloaded and loaded.
+  geoip-reload-period: 43200
 # Settings related to the player's nicknames restrictions.
 nickname-block:
   # Higher priority causes earlier execution.

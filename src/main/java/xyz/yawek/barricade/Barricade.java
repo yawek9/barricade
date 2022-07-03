@@ -86,10 +86,10 @@ public class Barricade {
         this.addressManager = new AddressManager(this);
         this.connectingUserManager = new ConnectingUserManager(this);
         this.storedUserManager = new StoredUserManager(this);
-        this.onlineUserManager = new OnlineUserManager(barricade);
+        this.onlineUserManager = new OnlineUserManager(this);
         this.accountLimitManager = new AccountLimitManager();
         this.rateLimitManager = new RateLimitManager();
-        this.serverQueueManager = new ServerQueueManager(barricade);
+        this.serverQueueManager = new ServerQueueManager(this);
 
         EventManager eventManager = server.getEventManager();
         eventManager.register(this, new PreLoginListener(this));
