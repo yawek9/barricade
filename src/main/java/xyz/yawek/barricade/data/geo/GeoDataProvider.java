@@ -55,9 +55,7 @@ public class GeoDataProvider {
         try {
             String licenseKey = barricade.getConfig().geoipLicense();
             if (licenseKey.equalsIgnoreCase("license_key")) {
-                LogUtils.warn("You have not set the GeoIP license key. " +
-                        "Setting valid license key is necessary for plugin to work.");
-                LogUtils.warn("Please set a valid license key and restart the server.");
+                logWarnNoSetup();
                 return;
             }
             File dataFolder = barricade.getDataDirectory().toFile();
@@ -88,6 +86,10 @@ public class GeoDataProvider {
     }
 
     public Optional<String> getCountryCode(InetAddress inetAddress) {
+        if (countryReader == null) {
+            logWarnNoSetup();
+            return Optional.empty();
+        }
         try {
             return Optional.of(countryReader.country(inetAddress).getCountry().getIsoCode());
         } catch (IOException | GeoIp2Exception ignored) {}
@@ -95,6 +97,10 @@ public class GeoDataProvider {
     }
 
     public Optional<String> getAsnCode(InetAddress inetAddress) {
+        if (countryReader == null) {
+            logWarnNoSetup();
+            return Optional.empty();
+        }
         try {
             return Optional.of("AS" + asnReader.asn(inetAddress).getAutonomousSystemNumber());
         } catch (IOException | GeoIp2Exception ignored) {}
@@ -137,6 +143,12 @@ public class GeoDataProvider {
                 .withCache(new CHMCache())
                 .fileMode(Reader.FileMode.MEMORY)
                 .build();
+    }
+
+    private void logWarnNoSetup() {
+        LogUtils.warn("You have not set the GeoIP license key. " +
+            "Setting valid license key is necessary for plugin to work.");
+        LogUtils.warn("Please set a valid license key and restart the server.");
     }
 
 }
