@@ -18,15 +18,14 @@
 
 package xyz.yawek.barricade.data.storage;
 
+import java.util.Optional;
+import org.jetbrains.annotations.Nullable;
 import xyz.yawek.barricade.Barricade;
 import xyz.yawek.barricade.data.storage.address.AddressDataAccess;
 import xyz.yawek.barricade.data.storage.user.UserDataAccess;
 import xyz.yawek.barricade.user.ConnectingUser;
 import xyz.yawek.barricade.user.StoredAddress;
 import xyz.yawek.barricade.user.StoredUser;
-
-import java.util.Optional;
-import java.util.Set;
 
 public class DataProvider {
 
@@ -47,8 +46,16 @@ public class DataProvider {
     public void updateConnectingUser(ConnectingUser connectingUser) {
         String address = connectingUser.getStringAddress();
         String nickname = connectingUser.getNickname();
-        addressDataAccess.addNickname(address, nickname);
-        userDataAccess.addAddress(nickname, address);
+        Optional<StoredAddress> addressOptional = addressDataAccess.getAddress(address);
+        addressOptional.ifPresentOrElse(
+            sAddress -> addressDataAccess.addNickname(
+                sAddress.getAddress(), nickname, sAddress.isWhitelisted(),
+                sAddress.isBlacklisted()),
+            () -> addressDataAccess.addNickname(address, nickname, false, false));
+        Optional<StoredUser> userOptional = userDataAccess.getUser(nickname);
+        userOptional.ifPresentOrElse(sUser -> userDataAccess.addAddress(
+                sUser.getNickname(), address, sUser.isWhitelisted(), sUser.isBlacklisted()),
+            () -> userDataAccess.addAddress(nickname, address, false, false));
     }
 
     public boolean isWhitelisted(ConnectingUser connectingUser) {
@@ -61,33 +68,35 @@ public class DataProvider {
     }
 
     public Optional<StoredAddress> getStoredAddress(String address) {
-        Optional<Set<String>> nicknamesOptional = addressDataAccess.getNicknames(address);
-        if (nicknamesOptional.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(new StoredAddress(address, nicknamesOptional.get(),
-                addressDataAccess.isWhitelisted(address), addressDataAccess.isBlacklisted(address)));
+        return addressDataAccess.getAddress(address);
     }
 
     public Optional<StoredUser> getStoredUser(String nickname) {
-        Optional<Set<String>> addressesOptional = userDataAccess.getAddresses(nickname);
-        if (addressesOptional.isEmpty()) {
-            return Optional.empty();
+        return userDataAccess.getUser(nickname);
+    }
+
+    public void addUser(@Nullable String nickname, @Nullable String address,
+        boolean whitelisted, boolean blacklisted) {
+        if (address != null) {
+            addressDataAccess.addNickname(address, nickname, whitelisted, blacklisted);
         }
-        return Optional.of(new StoredUser(nickname, addressesOptional.get(),
-                userDataAccess.isWhitelisted(nickname), userDataAccess.isBlacklisted(nickname)));
+        if (nickname != null) {
+            userDataAccess.addAddress(nickname, address, whitelisted, blacklisted);
+        }
     }
 
     public void updateStoredAddress(StoredAddress storedAddress) {
         String address = storedAddress.getAddress();
-        storedAddress.getNicknames().forEach(s -> addressDataAccess.addNickname(address, s));
+        storedAddress.getNicknames().forEach(s -> addressDataAccess.addNickname(
+            address, s, storedAddress.isWhitelisted(), storedAddress.isBlacklisted()));
         addressDataAccess.setWhitelisted(address, storedAddress.isWhitelisted());
         addressDataAccess.setBlacklisted(address, storedAddress.isBlacklisted());
     }
 
     public void updateStoredUser(StoredUser storedUser) {
         String nickname = storedUser.getNickname();
-        storedUser.getAddresses().forEach(s -> userDataAccess.addAddress(nickname, s));
+        storedUser.getAddresses().forEach(s -> userDataAccess.addAddress(
+            nickname, s, storedUser.isWhitelisted(), storedUser.isBlacklisted()));
         userDataAccess.setWhitelisted(nickname, storedUser.isWhitelisted());
         userDataAccess.setBlacklisted(nickname, storedUser.isBlacklisted());
     }

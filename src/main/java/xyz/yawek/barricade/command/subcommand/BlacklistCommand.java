@@ -19,6 +19,11 @@
 package xyz.yawek.barricade.command.subcommand;
 
 import com.velocitypowered.api.command.CommandSource;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import xyz.yawek.barricade.Barricade;
 import xyz.yawek.barricade.command.PermissibleCommand;
@@ -27,8 +32,8 @@ import xyz.yawek.barricade.manager.AddressManager;
 import xyz.yawek.barricade.manager.StoredUserManager;
 import xyz.yawek.barricade.user.StoredAddress;
 import xyz.yawek.barricade.user.StoredUser;
-
-import java.util.*;
+import xyz.yawek.barricade.util.AddressUtil;
+import xyz.yawek.barricade.util.NicknameUtil;
 
 public class BlacklistCommand extends PermissibleCommand {
 
@@ -76,6 +81,16 @@ public class BlacklistCommand extends PermissibleCommand {
 
                     barricade.getServer().getPlayer(storedUser.getNickname())
                             .ifPresent(player -> player.disconnect(config.blacklisted()));
+                    return;
+                }
+
+                if (AddressUtil.isValidIpAddress(args[1])) {
+                    addressManager.addBlacklistedAddress(args[1]);
+                    source.sendMessage(config.addressBlacklisted(args[1]));
+                    return;
+                } else if (NicknameUtil.isValid(args[1])) {
+                    storedUserManager.addBlacklistedUser(args[1]);
+                    source.sendMessage(config.playerBlacklisted(args[1]));
                     return;
                 }
                 source.sendMessage(config.wrongAddressPlayer(args[1]));

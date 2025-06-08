@@ -20,12 +20,17 @@ package xyz.yawek.barricade.data.storage.user;
 
 import java.util.Optional;
 import java.util.Set;
+import org.jetbrains.annotations.Nullable;
+import xyz.yawek.barricade.user.StoredUser;
 
 public interface UserDataAccess {
 
+    Optional<StoredUser> getUser(String nickname);
+
     Optional<Set<String>> getAddresses(String nickname);
 
-    void addAddress(String nickname, String address);
+    void addAddress(String nickname, @Nullable String address,
+        boolean whitelisted, boolean blacklisted);
 
     boolean isWhitelisted(String nickname);
 

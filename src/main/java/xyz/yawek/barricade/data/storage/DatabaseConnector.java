@@ -73,14 +73,14 @@ public class DatabaseConnector {
             connection.createStatement().execute("""
                         CREATE TABLE IF NOT EXISTS addresses (
                           address VARCHAR(50) NOT NULL PRIMARY KEY,
-                          nicknames MEDIUMTEXT NOT NULL,
+                          nicknames MEDIUMTEXT,
                           whitelisted TINYINT(1) DEFAULT FALSE,
                           blacklisted TINYINT(1) DEFAULT FALSE
                         )""");
             connection.createStatement().execute("""
                         CREATE TABLE IF NOT EXISTS users (
                           nickname VARCHAR(50) NOT NULL PRIMARY KEY,
-                          addresses MEDIUMTEXT NOT NULL,
+                          addresses MEDIUMTEXT,
                           whitelisted TINYINT(1) DEFAULT FALSE,
                           blacklisted TINYINT(1) DEFAULT FALSE
                         )""");
@@ -111,14 +111,14 @@ public class DatabaseConnector {
             connection.createStatement().execute("""
                         CREATE TABLE IF NOT EXISTS addresses (
                           address NOT NULL PRIMARY KEY,
-                          nicknames NOT NULL,
+                          nicknames,
                           whitelisted DEFAULT FALSE,
                           blacklisted DEFAULT FALSE
                         )""");
             connection.createStatement().execute("""
                         CREATE TABLE IF NOT EXISTS users (
                           nickname NOT NULL PRIMARY KEY,
-                          addresses NOT NULL,
+                          addresses,
                           whitelisted DEFAULT FALSE,
                           blacklisted DEFAULT FALSE
                         )""");

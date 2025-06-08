@@ -19,23 +19,53 @@
 package xyz.yawek.barricade.data.storage.address;
 
 import com.zaxxer.hikari.HikariDataSource;
-import xyz.yawek.barricade.data.storage.MySQLDataAccess;
-import xyz.yawek.barricade.util.LogUtils;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.Nullable;
+import xyz.yawek.barricade.data.storage.MySQLDataAccess;
+import xyz.yawek.barricade.user.StoredAddress;
+import xyz.yawek.barricade.util.LogUtils;
 
 public class MySQLAddressDataAccess extends MySQLDataAccess implements AddressDataAccess {
 
     public MySQLAddressDataAccess(HikariDataSource hikariDataSource) {
         super(hikariDataSource);
+    }
+
+    @Override
+    public Optional<StoredAddress> getAddress(String address) {
+        try (Connection connection = hikari.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement("""
+                          SELECT address, nicknames, whitelisted, blacklisted FROM addresses
+                          WHERE address = ?
+                        """);
+            preparedStatement.setString(1, address);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                String nicknamesString = resultSet.getString(2);
+                return Optional.of(
+                    new StoredAddress(
+                        resultSet.getString(1),
+                        nicknamesString != null ? Arrays.stream(nicknamesString.split(","))
+                            .collect(Collectors.toSet()) : Collections.emptySet(),
+                        resultSet.getBoolean(3),
+                        resultSet.getBoolean(4)
+                    )
+                );
+            }
+        } catch (SQLException e) {
+            LogUtils.errorDataAccess("Unable to get address '{}'.", address);
+            e.printStackTrace();
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -47,7 +77,11 @@ public class MySQLAddressDataAccess extends MySQLDataAccess implements AddressDa
             preparedStatement.setString(1, address);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
-                return Optional.of(Arrays.stream(resultSet.getString(1).split(","))
+                String nicknamesString = resultSet.getString(1);
+                if (nicknamesString == null) {
+                    return Optional.empty();
+                }
+                return Optional.of(Arrays.stream(nicknamesString.split(","))
                         .collect(Collectors.toSet()));
             }
         } catch (SQLException e) {
@@ -59,23 +93,35 @@ public class MySQLAddressDataAccess extends MySQLDataAccess implements AddressDa
     }
 
     @Override
-    public void addNickname(String address, String nickname) {
+    public void addNickname(String address, @Nullable String nickname,
+        boolean whitelisted, boolean blacklisted) {
         Set<String> nicknames = new HashSet<>();
         Optional<Set<String>> nicknamesOptional = getNicknames(address);
         nicknamesOptional.ifPresent(nicknames::addAll);
-        nicknames.add(nickname);
+        if (nickname != null) {
+            nicknames.add(nickname);
+        }
 
         try (Connection connection = hikari.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement("""
-                          INSERT INTO addresses (address, nicknames) VALUES (?, ?)
+                          INSERT INTO addresses (address, nicknames, whitelisted, blacklisted)
+                          VALUES (?, ?, ?, ?)
                           ON DUPLICATE KEY UPDATE
                           address = ?,
-                          nicknames = ?
+                          nicknames = ?,
+                          whitelisted = ?,
+                          blacklisted = ?
                         """);
             preparedStatement.setString(1, address);
-            preparedStatement.setString(2, String.join(",", nicknames));
-            preparedStatement.setString(3, address);
-            preparedStatement.setString(4, String.join(",", nicknames));
+            preparedStatement.setString(2, !nicknames.isEmpty()
+                ? String.join(",", nicknames) : null);
+            preparedStatement.setBoolean(3, whitelisted);
+            preparedStatement.setBoolean(4, blacklisted);
+            preparedStatement.setString(5, address);
+            preparedStatement.setString(6, !nicknames.isEmpty()
+                ? String.join(",", nicknames) : null);
+            preparedStatement.setBoolean(7, whitelisted);
+            preparedStatement.setBoolean(8, blacklisted);
             preparedStatement.execute();
         } catch (SQLException e) {
             LogUtils.errorDataAccess("Unable to add nickname '{}' " +

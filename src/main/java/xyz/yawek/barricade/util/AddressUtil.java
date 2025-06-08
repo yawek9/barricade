@@ -16,28 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.yawek.barricade.data.storage.address;
+package xyz.yawek.barricade.util;
 
-import java.util.Optional;
-import java.util.Set;
-import org.jetbrains.annotations.Nullable;
-import xyz.yawek.barricade.user.StoredAddress;
+import com.google.common.net.InetAddresses;
 
-public interface AddressDataAccess {
+public class AddressUtil {
 
-    Optional<StoredAddress> getAddress(String address);
-
-    Optional<Set<String>> getNicknames(String address);
-
-    void addNickname(String address, @Nullable String nickname,
-        boolean whitelisted, boolean blacklisted);
-
-    boolean isWhitelisted(String address);
-
-    void setWhitelisted(String address, boolean whitelisted);
-
-    boolean isBlacklisted(String address);
-
-    void setBlacklisted(String address, boolean blacklisted);
+  public static boolean isValidIpAddress(String input) {
+    try {
+      InetAddresses.forString(input);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+  }
 
 }

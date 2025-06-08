@@ -18,6 +18,7 @@
 
 package xyz.yawek.barricade.manager;
 
+import java.util.Collections;
 import xyz.yawek.barricade.Barricade;
 import xyz.yawek.barricade.user.StoredAddress;
 
@@ -37,6 +38,16 @@ public class AddressManager {
 
     public void update(StoredAddress storedAddress) {
         barricade.getDataProvider().updateStoredAddress(storedAddress);
+    }
+
+    public void addWhitelistedAddress(String address) {
+        barricade.getDataProvider().updateStoredAddress(
+            new StoredAddress(address, Collections.emptySet(), true, false));
+    }
+
+    public void addBlacklistedAddress(String address) {
+        barricade.getDataProvider().updateStoredAddress(
+            new StoredAddress(address, Collections.emptySet(), false, true));
     }
 
 }

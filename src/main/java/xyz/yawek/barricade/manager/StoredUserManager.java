@@ -18,10 +18,9 @@
 
 package xyz.yawek.barricade.manager;
 
+import java.util.Optional;
 import xyz.yawek.barricade.Barricade;
 import xyz.yawek.barricade.user.StoredUser;
-
-import java.util.Optional;
 
 public class StoredUserManager {
 
@@ -37,6 +36,14 @@ public class StoredUserManager {
 
     public void update(StoredUser storedUser) {
         barricade.getDataProvider().updateStoredUser(storedUser);
+    }
+
+    public void addWhitelistedUser(String nickname) {
+        barricade.getDataProvider().addUser(nickname, null, true, false);
+    }
+
+    public void addBlacklistedUser(String nickname) {
+        barricade.getDataProvider().addUser(nickname, null, false, true);
     }
 
 }

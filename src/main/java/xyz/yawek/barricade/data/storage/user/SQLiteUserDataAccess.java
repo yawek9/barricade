@@ -18,7 +18,10 @@
 
 package xyz.yawek.barricade.data.storage.user;
 
+import java.util.Collections;
+import org.jetbrains.annotations.Nullable;
 import xyz.yawek.barricade.data.storage.SQLiteDataAccess;
+import xyz.yawek.barricade.user.StoredUser;
 import xyz.yawek.barricade.util.LogUtils;
 
 import java.sql.Connection;
@@ -38,6 +41,33 @@ public class SQLiteUserDataAccess extends SQLiteDataAccess implements UserDataAc
     }
 
     @Override
+    public Optional<StoredUser> getUser(String nickname) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement("""
+                          SELECT nickname, addresses, whitelisted, blacklisted FROM users
+                          WHERE nickname = ?
+                        """)) {
+            preparedStatement.setString(1, nickname);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                String addressesString = resultSet.getString(2);
+                return Optional.of(
+                    new StoredUser(
+                        resultSet.getString(1),
+                        addressesString != null ? Arrays.stream(addressesString.split(","))
+                            .collect(Collectors.toSet()) : Collections.emptySet(),
+                        resultSet.getBoolean(3),
+                        resultSet.getBoolean(4)
+                    )
+                );
+            }
+        } catch (SQLException e) {
+            LogUtils.errorDataAccess("Unable to get user '{}'.", nickname);
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<Set<String>> getAddresses(String nickname) {
         try (PreparedStatement preparedStatement = connection.prepareStatement("""
                           SELECT addresses FROM users WHERE nickname = ?
@@ -45,7 +75,11 @@ public class SQLiteUserDataAccess extends SQLiteDataAccess implements UserDataAc
             preparedStatement.setString(1, nickname);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
-                return Optional.of(Arrays.stream(resultSet.getString(1).split(","))
+                String addressesString = resultSet.getString(1);
+                if (addressesString == null) {
+                    return Optional.empty();
+                }
+                return Optional.of(Arrays.stream(addressesString.split(","))
                         .collect(Collectors.toSet()));
             }
         } catch (SQLException e) {
@@ -57,22 +91,34 @@ public class SQLiteUserDataAccess extends SQLiteDataAccess implements UserDataAc
     }
 
     @Override
-    public void addAddress(String nickname, String address) {
+    public void addAddress(String nickname, @Nullable String address,
+        boolean whitelisted, boolean blacklisted) {
         Set<String> addresses = new HashSet<>();
         Optional<Set<String>> addressesOptional = getAddresses(nickname);
         addressesOptional.ifPresent(addresses::addAll);
-        addresses.add(address);
+        if (address != null) {
+            addresses.add(address);
+        }
 
         try (PreparedStatement preparedStatement = connection.prepareStatement("""
-                          INSERT INTO users (nickname, addresses) VALUES (?, ?)
+                          INSERT INTO users (nickname, addresses, whitelisted, blacklisted)
+                          VALUES (?, ?, ?, ?)
                           ON CONFLICT(nickname) DO UPDATE SET
                           nickname = ?,
-                          addresses = ?
+                          addresses = ?,
+                          whitelisted = ?,
+                          blacklisted = ?
                         """)) {
             preparedStatement.setString(1, nickname);
-            preparedStatement.setString(2, String.join(",", addresses));
-            preparedStatement.setString(3, nickname);
-            preparedStatement.setString(4, String.join(",", addresses));
+            preparedStatement.setString(2, !addresses.isEmpty()
+                ? String.join(",", addresses) : null);
+            preparedStatement.setBoolean(3, whitelisted);
+            preparedStatement.setBoolean(4, blacklisted);
+            preparedStatement.setString(5, nickname);
+            preparedStatement.setString(6, !addresses.isEmpty()
+                ? String.join(",", addresses) : null);
+            preparedStatement.setBoolean(7, whitelisted);
+            preparedStatement.setBoolean(8, blacklisted);
             preparedStatement.execute();
         } catch (SQLException e) {
             LogUtils.errorDataAccess("Unable to add address '{}' " +

@@ -29,6 +29,8 @@ import xyz.yawek.barricade.user.StoredAddress;
 import xyz.yawek.barricade.user.StoredUser;
 
 import java.util.*;
+import xyz.yawek.barricade.util.AddressUtil;
+import xyz.yawek.barricade.util.NicknameUtil;
 
 public class WhitelistCommand extends PermissibleCommand {
 
@@ -67,6 +69,16 @@ public class WhitelistCommand extends PermissibleCommand {
                     }
                     storedUser.setWhitelisted(true);
                     storedUserManager.update(storedUser);
+                    source.sendMessage(config.playerWhitelisted(args[1]));
+                    return;
+                }
+
+                if (AddressUtil.isValidIpAddress(args[1])) {
+                    addressManager.addWhitelistedAddress(args[1]);
+                    source.sendMessage(config.addressWhitelisted(args[1]));
+                    return;
+                } else if (NicknameUtil.isValid(args[1])) {
+                    storedUserManager.addWhitelistedUser(args[1]);
                     source.sendMessage(config.playerWhitelisted(args[1]));
                     return;
                 }
