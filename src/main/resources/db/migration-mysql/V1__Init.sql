@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS addresses (
+  address VARCHAR(50) NOT NULL PRIMARY KEY,
+  nicknames MEDIUMTEXT,
+  whitelisted BOOLEAN DEFAULT FALSE,
+  blacklisted BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  nickname VARCHAR(50) NOT NULL PRIMARY KEY,
+  addresses MEDIUMTEXT,
+  whitelisted BOOLEAN DEFAULT FALSE,
+  blacklisted BOOLEAN DEFAULT FALSE
+);

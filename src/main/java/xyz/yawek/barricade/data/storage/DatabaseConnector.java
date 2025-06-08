@@ -19,6 +19,13 @@
 package xyz.yawek.barricade.data.storage;
 
 import com.zaxxer.hikari.HikariDataSource;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 import xyz.yawek.barricade.Barricade;
 import xyz.yawek.barricade.config.Config;
 import xyz.yawek.barricade.data.storage.address.AddressDataAccess;
@@ -28,12 +35,6 @@ import xyz.yawek.barricade.data.storage.user.MySQLUserDataAccess;
 import xyz.yawek.barricade.data.storage.user.SQLiteUserDataAccess;
 import xyz.yawek.barricade.data.storage.user.UserDataAccess;
 import xyz.yawek.barricade.util.LogUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class DatabaseConnector {
 
@@ -69,24 +70,16 @@ public class DatabaseConnector {
         hikari.addDataSourceProperty("password", config.databasePassword());
         hikari.setPoolName("barricade-hikari");
 
-        try (Connection connection = hikari.getConnection()) {
-            connection.createStatement().execute("""
-                        CREATE TABLE IF NOT EXISTS addresses (
-                          address VARCHAR(50) NOT NULL PRIMARY KEY,
-                          nicknames MEDIUMTEXT,
-                          whitelisted TINYINT(1) DEFAULT FALSE,
-                          blacklisted TINYINT(1) DEFAULT FALSE
-                        )""");
-            connection.createStatement().execute("""
-                        CREATE TABLE IF NOT EXISTS users (
-                          nickname VARCHAR(50) NOT NULL PRIMARY KEY,
-                          addresses MEDIUMTEXT,
-                          whitelisted TINYINT(1) DEFAULT FALSE,
-                          blacklisted TINYINT(1) DEFAULT FALSE
-                        )""");
+        try {
+            Flyway.configure(barricade.getClass().getClassLoader())
+                .dataSource(hikari)
+                .locations("classpath:db/migration-mysql")
+                .baselineOnMigrate(true)
+                .load()
+                .migrate();
             LogUtils.infoDataAccess("Database connection has been initialized successfully.");
-        } catch (Exception e) {
-            LogUtils.infoDataAccess("Database connection could not be initialized.");
+        } catch (FlywayException e) {
+            LogUtils.errorDataAccess("Database connection could not be initialized.");
             e.printStackTrace();
         }
     }
@@ -108,22 +101,16 @@ public class DatabaseConnector {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
-            connection.createStatement().execute("""
-                        CREATE TABLE IF NOT EXISTS addresses (
-                          address NOT NULL PRIMARY KEY,
-                          nicknames,
-                          whitelisted DEFAULT FALSE,
-                          blacklisted DEFAULT FALSE
-                        )""");
-            connection.createStatement().execute("""
-                        CREATE TABLE IF NOT EXISTS users (
-                          nickname NOT NULL PRIMARY KEY,
-                          addresses,
-                          whitelisted DEFAULT FALSE,
-                          blacklisted DEFAULT FALSE
-                        )""");
+
+            Flyway.configure(barricade.getClass().getClassLoader())
+                .dataSource("jdbc:sqlite:"
+                    + databaseFile.getAbsolutePath(), null, null)
+                .locations("classpath:db/migration-sqlite")
+                .baselineOnMigrate(true)
+                .load()
+                .migrate();
             LogUtils.infoDataAccess("Database connection has been initialized successfully.");
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (ClassNotFoundException | SQLException | FlywayException e) {
             LogUtils.errorDataAccess("Database connection could not be initialized.");
             e.printStackTrace();
         }
