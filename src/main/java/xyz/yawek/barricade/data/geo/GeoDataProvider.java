@@ -22,12 +22,6 @@ import com.maxmind.db.CHMCache;
 import com.maxmind.db.Reader;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.utils.IOUtils;
-import xyz.yawek.barricade.Barricade;
-import xyz.yawek.barricade.util.LogUtils;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -36,8 +30,16 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.zip.GZIPInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.utils.IOUtils;
+import xyz.yawek.barricade.Barricade;
+import xyz.yawek.barricade.util.LogUtils;
 
 public class GeoDataProvider {
 
@@ -64,19 +66,26 @@ public class GeoDataProvider {
             File asnFile = new File(dataFolder, "GeoLite2-ASN.mmdb");
             File asnArchiveFile = new File(dataFolder, "GeoLite2-ASN.tar.gz");
 
-            LogUtils.info("Downloading GeoIP databases...");
+            LogUtils.info("Loading GeoIP databases...");
             if (countryReader != null) countryReader.close();
-            downloadDBFile(countryFile, countryArchiveFile,
+            boolean isReloadPeriodReached = Duration.between(
+                    Files.getLastModifiedTime(countryFile.toPath()).toInstant(), Instant.now())
+                .toSeconds() >= barricade.getConfig().geoipReloadPeriod();
+            if (isReloadPeriodReached) {
+                downloadDBFile(countryFile, countryArchiveFile,
                     "https://download.maxmind.com/app/geoip_download" +
-                            "?edition_id=GeoLite2-Country&license_key=" +
-                            licenseKey +
-                            "&suffix=tar.gz");
+                        "?edition_id=GeoLite2-Country&license_key=" +
+                        licenseKey +
+                        "&suffix=tar.gz");
+            }
             if (asnReader != null) asnReader.close();
-            downloadDBFile(asnFile, asnArchiveFile,
+            if (isReloadPeriodReached) {
+                downloadDBFile(asnFile, asnArchiveFile,
                     "https://download.maxmind.com/app/geoip_download" +
-                            "?edition_id=GeoLite2-ASN&license_key=" +
-                            licenseKey +
-                            "&suffix=tar.gz");
+                        "?edition_id=GeoLite2-ASN&license_key=" +
+                        licenseKey +
+                        "&suffix=tar.gz");
+            }
             countryReader = loadReader("GeoLite2-Country.mmdb");
             asnReader = loadReader("GeoLite2-ASN.mmdb");
         } catch (IOException e) {
