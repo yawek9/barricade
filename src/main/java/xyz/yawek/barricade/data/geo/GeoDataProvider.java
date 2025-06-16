@@ -68,10 +68,13 @@ public class GeoDataProvider {
 
             LogUtils.info("Loading GeoIP databases...");
             if (countryReader != null) countryReader.close();
-            boolean isReloadPeriodReached = Duration.between(
+            boolean shouldDownloadGeoFiles = !countryFile.exists() || !asnFile.exists();
+            if (!shouldDownloadGeoFiles) {
+                shouldDownloadGeoFiles = Duration.between(
                     Files.getLastModifiedTime(countryFile.toPath()).toInstant(), Instant.now())
-                .toSeconds() >= barricade.getConfig().geoipReloadPeriod();
-            if (isReloadPeriodReached) {
+                    .toSeconds() >= barricade.getConfig().geoipReloadPeriod();
+            }
+            if (shouldDownloadGeoFiles) {
                 downloadDBFile(countryFile, countryArchiveFile,
                     "https://download.maxmind.com/app/geoip_download" +
                         "?edition_id=GeoLite2-Country&license_key=" +
@@ -79,7 +82,7 @@ public class GeoDataProvider {
                         "&suffix=tar.gz");
             }
             if (asnReader != null) asnReader.close();
-            if (isReloadPeriodReached) {
+            if (shouldDownloadGeoFiles) {
                 downloadDBFile(asnFile, asnArchiveFile,
                     "https://download.maxmind.com/app/geoip_download" +
                         "?edition_id=GeoLite2-ASN&license_key=" +
